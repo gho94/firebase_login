@@ -1,4 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_login/controller/todo_controller.dart';
+import 'package:firebase_login/controller/user_controller.dart';
 import 'package:firebase_login/screen/home_screen.dart';
 import 'package:firebase_login/screen/login_screen.dart';
 import 'package:firebase_login/screen/sign_up_screen.dart';
@@ -9,10 +11,12 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
-  Firebase.initializeApp(
+  await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  Get.put(TodoController());
+  Get.put(UserController());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {

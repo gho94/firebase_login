@@ -42,17 +42,26 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 20),
             SizedBox(
+              height: 48,
               width: MediaQuery.of(context).size.width,
               child: ElevatedButton(
                 onPressed: () async {
                   try {
-                    await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                    await FirebaseAuth.instance.signInWithEmailAndPassword(
                       email: _emailController.text,
                       password: _passwordController.text,
                     );
                     Get.toNamed("/home");
                   } on FirebaseAuthException catch (exception) {
-                    Get.snackbar("Error", exception.code);
+                    String errorMessage = '';
+                    if (exception.code == 'user-not-found') {
+                      errorMessage = '해당 이메일로 가입된 계정이 없습니다.';
+                    } else if (exception.code == 'wrong-password') {
+                      errorMessage = '비밀번호가 틀렸습니다.';
+                    } else {
+                      errorMessage = exception.message ?? '로그인에 실패했습니다.';
+                    }
+                    Get.snackbar("Error", errorMessage);
                   }
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: const Color(0xff8A2BE2)),
@@ -61,6 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 20),
             SizedBox(
+              height: 48,
               width: MediaQuery.of(context).size.width,
               child: ElevatedButton(
                 onPressed: () => Get.toNamed("/signUp"),
