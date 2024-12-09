@@ -49,6 +49,7 @@ class UserController extends GetxController {
       user.value = userCredential.user;
 
       Get.find<TodoController>().loadTodo();
+      Get.find<TodoController>().loadTodoTest();
     } on FirebaseAuthException catch (exception) {
       String errorMessage = "";
       if (exception.code == "user-not-found") {

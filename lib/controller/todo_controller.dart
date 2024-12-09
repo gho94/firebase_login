@@ -1,11 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_login/model/todo.dart';
+import 'package:firebase_login/model/todo_test.dart';
 import 'package:get/get.dart';
 
 class TodoController extends GetxController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   RxList<Todo> todos = <Todo>[].obs;
+  RxList<TodoTest> todoTests = <TodoTest>[].obs;
+  RxList<String> comment = <String>[].obs;
 
   void loadTodo() async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
@@ -18,6 +21,43 @@ class TodoController extends GetxController {
     docSnapshot.data()!.forEach((key, value) {
       todos.add(Todo.fromMap(value));
     });
+  }
+
+  void loadTodoTest() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    final querySnapshot = await _firestore.collection('todosTest').doc(userId).collection("todo").get();
+
+    if (querySnapshot.docs.isEmpty) return;
+
+    todoTests.clear();
+    for (QueryDocumentSnapshot<Map<String, dynamic>> doc in querySnapshot.docs) {
+      todoTests.add(TodoTest.fromMap(doc.data(), doc.id));
+    }
+  }
+
+  void loadTodoCommentTest(String id) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    final querySnapshot = await _firestore.collection('todosTest').doc(userId).collection("todo").doc(id).collection("comment").get();
+
+    if (querySnapshot.docs.isEmpty) return;
+
+    comment.clear();
+    for (QueryDocumentSnapshot<Map<String, dynamic>> doc in querySnapshot.docs) {
+      comment.add(doc.data()["comment"]);
+    }
+  }
+
+  void addTodoCommentTest(String id, String comment) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    await _firestore.collection("todosTest").doc(userId).collection("todo").doc(id).collection("comment").add({"comment": comment});
+
+    loadTodoCommentTest(id);
   }
 
   void addTodo(Todo todo) async {
@@ -46,6 +86,13 @@ class TodoController extends GetxController {
     loadTodo();
   }
 
+  void addTodoTest(TodoTest todoTest) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    await _firestore.collection("todosTest").doc(userId).collection("todo").add(todoTest.toMap());
+  }
+
   void updateTodo(String id, Todo todo) async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return;
@@ -57,6 +104,15 @@ class TodoController extends GetxController {
     loadTodo();
   }
 
+  void updateTodoTest(String id, TodoTest todoTest) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    await _firestore.collection("todosTest").doc(userId).collection("todo").doc(id).update(todoTest.toMap());
+
+    loadTodoTest();
+  }
+
   void deleteTodo(String id) async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return;
@@ -66,5 +122,14 @@ class TodoController extends GetxController {
     });
 
     loadTodo();
+  }
+
+  void deleteTodoTest(String id) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    await _firestore.collection("todosTest").doc(userId).collection("todo").doc(id).delete();
+
+    loadTodoTest();
   }
 }
