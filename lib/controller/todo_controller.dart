@@ -7,12 +7,6 @@ class TodoController extends GetxController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   RxList<Todo> todos = <Todo>[].obs;
 
-  @override
-  void onInit() {
-    super.onInit();
-    loadTodo();
-  }
-
   void loadTodo() async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return;

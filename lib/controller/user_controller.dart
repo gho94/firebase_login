@@ -1,26 +1,54 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_login/controller/todo_controller.dart';
 import 'package:get/get.dart';
 
 class UserController extends GetxController {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   Rx<User?> user = Rx<User?>(null);
 
   @override
   void onInit() {
     super.onInit();
-    user.value = FirebaseAuth.instance.currentUser;
-
-    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+    user.value = _auth.currentUser;
+    _auth.authStateChanges().listen((User? user) {
       this.user.value = user;
     });
   }
 
-  Future<void> login(String email, String password) async {
+  Future<void> signUp(String email, String password, String name) async {
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+
+      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+        "name": name,
+        "email": email,
+      });
+
+      User? user = userCredential.user;
+      await user?.updateDisplayName(name);
+      await user?.reload();
+      user = _auth.currentUser;
+
+      Get.snackbar("Success", "회원가입이 완료되었습니다.");
+    } on FirebaseAuthException catch (exception) {
+      throw exception.message ?? "회원가입에 실패했습니다.";
+    }
+  }
+
+  Future<void> login(String email, String password) async {
+    try {
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      user.value = userCredential.user;
+
+      Get.find<TodoController>().loadTodo();
     } on FirebaseAuthException catch (exception) {
       String errorMessage = "";
       if (exception.code == "user-not-found") {
@@ -34,30 +62,9 @@ class UserController extends GetxController {
     }
   }
 
-  Future<void> signUp(String email, String password, String name) async {
-    try {
-      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      User? user = userCredential.user;
-      await user?.updateDisplayName(name);
-      await user?.reload();
-      user = FirebaseAuth.instance.currentUser;
-
-      await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
-        "name": name,
-        "email": email,
-      });
-
-      Get.snackbar("Success", "회원가입이 완료되었습니다.");
-    } on FirebaseAuthException catch (exception) {
-      throw exception.message ?? "회원가입에 실패했습니다.";
-    }
-  }
-
   Future<void> logout() async {
-    await FirebaseAuth.instance.signOut();
+    await _auth.signOut();
+    user.value = null;
+    Get.snackbar("Success", "로그아웃이 완료되었습니다.");
   }
 }

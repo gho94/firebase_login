@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_login/controller/user_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -15,6 +15,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userController = Get.find<UserController>();
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -47,21 +49,10 @@ class _LoginScreenState extends State<LoginScreen> {
               child: ElevatedButton(
                 onPressed: () async {
                   try {
-                    await FirebaseAuth.instance.signInWithEmailAndPassword(
-                      email: _emailController.text,
-                      password: _passwordController.text,
-                    );
+                    await userController.login(_emailController.text, _passwordController.text);
                     Get.toNamed("/home");
-                  } on FirebaseAuthException catch (exception) {
-                    String errorMessage = '';
-                    if (exception.code == 'user-not-found') {
-                      errorMessage = '해당 이메일로 가입된 계정이 없습니다.';
-                    } else if (exception.code == 'wrong-password') {
-                      errorMessage = '비밀번호가 틀렸습니다.';
-                    } else {
-                      errorMessage = exception.message ?? '로그인에 실패했습니다.';
-                    }
-                    Get.snackbar("Error", errorMessage);
+                  } on String catch (error) {
+                    Get.snackbar("Error", error);
                   }
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: const Color(0xff8A2BE2)),

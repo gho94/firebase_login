@@ -1,5 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_login/controller/user_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -18,49 +17,42 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _isLoading = false;
   bool _showPassword = true;
 
-  Future<void> registerUser() async {
+  bool validSingUp() {
     if (_emailController.text.isEmpty || !_emailController.text.contains('@')) {
       Get.snackbar("Error", "유효한 이메일을 입력하세요.");
-      return;
+      return false;
     }
 
     if (_passwordController.text.length < 6) {
       Get.snackbar("Error", "비밀번호는 최소 6자 이상이어야 합니다.");
-      return;
+      return false;
     }
 
     if (_nameController.text.isEmpty) {
       Get.snackbar("Error", "이름을 입력해주세요.");
-      return;
+      return false;
     }
+
+    return true;
+  }
+
+  Future<void> registerUser() async {
+    if (!validSingUp()) return;
 
     setState(() {
       _isLoading = true;
     });
 
+    final userController = Get.find<UserController>();
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
+      await userController.signUp(
+        _emailController.text,
+        _passwordController.text,
+        _nameController.text,
       );
-
-      User? user = userCredential.user;
-      await user?.updateDisplayName(_nameController.text);
-      await user?.reload();
-      user = FirebaseAuth.instance.currentUser;
-
-      await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
-        "name": _nameController.text,
-        "email": _emailController.text,
-      });
-
-      Get.snackbar("Success", "회원가입이 완료되었습니다.");
-
-      await Future.delayed(const Duration(seconds: 1));
-
       Get.toNamed("/login");
-    } on FirebaseAuthException catch (exception) {
-      Get.snackbar("Error", exception.code);
+    } on String catch (error) {
+      Get.snackbar("Error", error);
     } finally {
       setState(() {
         _isLoading = false;

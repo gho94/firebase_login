@@ -1,3 +1,4 @@
+import 'package:firebase_login/screen/google_login.dart';
 import 'package:firebase_login/screen/setting_screen.dart';
 import 'package:firebase_login/screen/todo_screen.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +11,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
+  int _currentIndex = 1;
 
   void _onTap(int index) {
     setState(() {
@@ -26,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: const [
           TodoScreen(),
           SettingScreen(),
+          SignInDemo(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -34,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.list), label: "TodoList"),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Setting"),
+          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: "Google"),
         ],
       ),
     );
